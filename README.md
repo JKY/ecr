@@ -1,3 +1,3 @@
 ecr
 ===
-a reseach project for data mining & mashine learning
+a reseach project for data mining & machine learning

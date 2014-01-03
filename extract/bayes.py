@@ -1,7 +1,12 @@
 #encoding=utf8
 import codecs
 from copy import deepcopy
-
+import re 
+# 分词
+def seg_words(ss):
+    from jieba import cut
+    return cut(ss)
+    
 # 使用朴素贝叶斯算法在商品名称中提取品牌,
 # 定理参见: http://zh.wikipedia.org/wiki/贝叶斯定理
 # 思路:
@@ -16,13 +21,15 @@ class Naive(object):
     # "起点"统计, "终点"统计
     def traning(self,samples):
         self.tab = self.calc_init(samples)
-        if self.debug:
-            self.debug_print(self.tab)
+        #if self.debug:
+        #    self.debug_print(self.tab)
         self.begin = self._count(samples,self.tab,start=1)
         if self.debug:
+            print "-------------begin-------------"
             self.debug_print(self.begin)
         self.end = self._count(samples,self.tab,start=0)
         if self.debug:
+            print "--------------end--------------"
             self.debug_print(self.end)
         
     # 根据训练样本提取给定字符串的商品名    
@@ -48,10 +55,12 @@ class Naive(object):
             if len(arr) != 2:
                 continue
             desc  = arr[0].strip()
+            words = seg_words(desc)
             n += 1
-            for c in desc:
-                if c not in symbols:
-                    symbols[c] = [0,0,0]
+            for w in words:
+                if w not in symbols:
+                    symbols[w] = [0,0,0]
+                    #print ":%s:" % w
         symbols['$'] = [0,0,0]
         tmp.close()
         return {
@@ -91,8 +100,16 @@ class Naive(object):
                     i = len(desc)+1
                 else:
                     tmp = desc.find(sym)
-                    i = tmp+1 if tmp!=-1 else -1
-                target = desc[ i: i+len(entry)] if start==1 else desc[ i-len(entry)-1:i-1]
+                    i = tmp + 1 if tmp!=-1 else -1
+                    
+                if start == 1:
+                    target_begin = i + len(sym) - 1
+                    target_end = target_begin + len(entry)
+                else:
+                    target_end = i - 1
+                    target_begin = target_end - len(entry)
+                target = desc[ target_begin:target_end ]
+                #print "%s....i=%d,begin=%d, end=%d,target=%s" % (sym,i,target_begin,target_end,target)
                 if i > -1:
                     symbols['symbol']['map'][sym][2] += 1
                     if target == entry:
@@ -151,12 +168,14 @@ class Naive(object):
             i = 0
         # middle
         m = 0
-        for c in line:
-            m += 1
-            if c not in samples['symbol']['map']:
-                print "skip:%s" % c
+        words = seg_words(line)
+        for w in words:
+            m = line.find(w)
+            if w not in samples['symbol']['map']:
+                if self.debug:
+                    print "MISS:%s" % w
                 continue
-            tmp = self.pi_a(samples,c)
+            tmp = self.pi_a(samples,w)
             if tmp > maxp:
                 maxp = tmp
                 i = m

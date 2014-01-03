@@ -17,29 +17,33 @@ def load_test(path):
     return lines
            
 
-if __name__ == '__main__':   
-    s = u'友阳yosun不锈钢落地可伸缩收纳X型晾衣晒被架Y-6303'
+if __name__ == '__main__': 
+    '''  
+    s = u"阿札AZA女包2013新款复古镂空撞色拼接刺绣邮差手提斜挎女包 9871 爱丁堡蓝"
     extr = NaiveBayesExtractor()
-    extr.traning('./data/brand_sample.txt')
+    extr.traning("./data/brand_sample.txt")
     begin,end = extr.extract(s)
-    result = s[begin:end-1]
-    print "品牌:%s" % result.encode('utf-8')
-            
+    result = s[begin:end]
+    print "品牌:%s" % result.encode("utf-8")
+    exit()       
+    ''' 
+
     
-    #extr = NaiveBayesExtractor()
-    #extr.traning('./data/brand_sample.txt')
-    #str = u'sdsdsdafa'
-    #lines = load_test('./data/brand_test.txt')
-    #sum = len(lines)
-    #error = 0
-    #error_f = codecs.open("./data/err.txt","w","utf-8")
-    #for str,entry in lines:
-    #    begin,end = extr.extract(str)
-    #    result = str[begin:end-1]
-    #    print "品牌:%s" % result.encode('utf-8')
-    #    if entry != result:
-    #        error += 1
-    #        error_f.write(str + "\n")
-    #error_f.close()
-    #print "total:%d,error=%d,er=%f" % (sum,error,float(error)/sum)
+    extr = NaiveBayesExtractor(debug=False)
+    extr.traning("./data/brand_sample.txt")
+    lines = load_test("./data/brand_test.txt")
+    sum = len(lines)
+    error = 0
+    error_f = codecs.open("./data/err.txt","w","utf-8")
+    for str,entry in lines:
+        str = str[0:10]
+        begin,end = extr.extract(str)
+        result = str[begin:end]
+        #print "品牌:%s" % result.encode('utf-8')
+        if entry != result:
+            error += 1
+            print "ERROR:%s vs %s, *** %s" % (entry,result,str)
+            error_f.write(str + "\n")
+    error_f.close()
+    print "total:%d,error=%d,er=%f" % (sum,error,float(error)/sum)
     

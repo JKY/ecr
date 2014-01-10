@@ -15,8 +15,10 @@ def seg_words(ss):
 #    通过a,b截取品牌名
 class Naive(object):
     
-    def __init__(self,debug = True):
+    def __init__(self, debug = True, begin_tab = None, end_tab = None):
         self.debug = debug
+        self.begin_tab = begin_tab
+        self.end_tab = end_tab
         
     # "起点"统计, "终点"统计
     def traning(self,samples):
@@ -26,11 +28,11 @@ class Naive(object):
         self.begin = self._count(samples,self.tab,start=1)
         if self.debug:
             print "-------------begin-------------"
-            self.debug_print(self.begin)
+            self.debug_print(self.begin,path = self.begin_tab)
         self.end = self._count(samples,self.tab,start=0)
         if self.debug:
             print "--------------end--------------"
-            self.debug_print(self.end)
+            self.debug_print(self.end, path = self.end_tab)
         
     # 根据训练样本提取给定字符串的商品名    
     def extract(self,str):
@@ -74,11 +76,16 @@ class Naive(object):
                }
             
     # 调试输出 统计表
-    def debug_print(self,tab):
+    def debug_print(self,tab,path=None):
         print "summary:samples=%d,chars=%d" % (tab['summary']['samples'],tab['symbol']['total'])
         print "------------------------------------"
         for k,sym in tab['symbol']['map'].items():
             print "%s=%r" % (k.encode('utf-8'),sym)
+        if path is not None:
+            tmp = codecs.open(path,"w","utf-8")
+            for k,sym in tab['symbol']['map'].items():
+                tmp.write("%s [%d,%d,%d]\n" % (k,sym[0],sym[1],sym[2]))
+            tmp.close()
             
     # 统计样本中字符前(后) 出现(品牌名), 不出现(品牌) 的次数  
     def _count(self,path,samples,start=1):
@@ -169,6 +176,7 @@ class Naive(object):
         # middle
         m = 0
         words = seg_words(line)
+        print "-------"
         for w in words:
             m = line.find(w)
             if w not in samples['symbol']['map']:
@@ -176,6 +184,9 @@ class Naive(object):
                     print "MISS:%s" % w
                 continue
             tmp = self.pi_a(samples,w)
+            print "....%s,%f" % (w,tmp)
+            if tmp > 0:
+                return (m,tmp)
             if tmp > maxp:
                 maxp = tmp
                 i = m
